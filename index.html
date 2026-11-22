@@ -109,9 +109,9 @@ th{cursor:pointer;white-space:nowrap}
 </div></div>
 
 <script>
-const GOOGLE_SHEET_CSV_URL=""; // tempel link CSV Google Sheets di sini (opsional; bisa juga lewat tombol Sumber Data)
+const GOOGLE_SHEET_CSV_URL="https://script.google.com/macros/library/d/1IXc7g-jdm-ZU2ZHLQN91dguDwqu2gUuIC0JsC4aoZsaGE1R4-XpsIFjQ/1"; // tempel link CSV Google Sheets di sini (opsional; bisa juga lewat tombol Sumber Data)
 const REFRESH_MS=60000;
-const APPS_SCRIPT_URL=""; // TEMPEL URL Web App Apps Script (…/exec) di sini → data dibaca & disimpan ke Google Sheets, terlihat semua pengguna
+const APPS_SCRIPT_URL="https://script.google.com/macros/library/d/1IXc7g-jdm-ZU2ZHLQN91dguDwqu2gUuIC0JsC4aoZsaGE1R4-XpsIFjQ/1"; // TEMPEL URL Web App Apps Script (…/exec) di sini → data dibaca & disimpan ke Google Sheets, terlihat semua pengguna
 const PIC_DEF={'Zona 1':'Fuad','Zona 2':'Ansari','Zona 3':'Bravo','Umum':'TD / Umum'};
 let ZONA_PIC=Object.assign({},PIC_DEF,JSON.parse(localStorage.getItem('pm_pic')||'{}')),SPVO=JSON.parse(localStorage.getItem('pm_spv')||'{}');
 const BLN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
