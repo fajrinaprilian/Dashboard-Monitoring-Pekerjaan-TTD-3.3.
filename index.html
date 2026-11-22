@@ -1769,7 +1769,7 @@ function fx(){const it=CUI(),m=MI();if(!it||document.querySelector('[name=fm]:ch
  const pre=realAt(it,new Date(Dg.getTime()-864e5),PC),now=(it.rd&&it.rd[tg])||0,add=+$('gr').value||0;
  $('gkum').innerHTML=`Komulatif s/d ${tg?fd(tg):'-'} sebelum input: <b>${h?fv(pre/h)+' '+sat+' · ':''}${rp(pre)}</b> (${pc(pr(pre,it.nilai))})`
   +(now?` · sudah ada entri tanggal ini <b>${rp(now)}</b> (akan diganti)`:'')
-  +(add>0?(()=>{const tot=Math.min(it.nilai,pre+add),lbh=pre+add>it.nilai+1;
+  +(add!==0?(()=>{const tot=Math.max(0,Math.min(it.nilai,pre+add)),lbh=pre+add>it.nilai+1;
   return ` → setelah input: <b>${h?fv(tot/h)+' '+sat+' · ':''}${rp(tot)}</b> (${pc(pr(tot,it.nilai))})`
    +(lbh?` <b style="color:#EF4444">⚠ melebihi sisa kontrak ${h?fv(Math.max(0,it.nilai-pre)/h)+' '+sat:rp(Math.max(0,it.nilai-pre))}, kelebihan tidak dihitung</b>`:'')})():'');
  const E_=Object.entries(it.rd||{}).sort();
@@ -1819,8 +1819,8 @@ $('gS').onclick=()=>{const l=GL();if(!l)return fm('Pilih titik lokasi','#EF4444'
   recalc();render();fi();ff();fx();return fm('✓ Item diperbarui','#10B981')}
  if(!a){const i=+$('gi').value,it=l.items[i],v=+$('gr').value,tg=$('gbd').value;
   if(!tg)return fm('Pilih tanggal progres','#EF4444');
-  if(!isFinite(v)||v<0||$('gr').value==='')return fm('Isi volume / Rp / % realisasi yang valid','#EF4444');
-  it.rd=it.rd||{};if(v>0)it.rd[tg]=v;else delete it.rd[tg];
+  if(!isFinite(v)||$('gr').value==='')return fm('Isi volume / Rp / % realisasi yang valid (boleh minus untuk koreksi)','#EF4444');
+  it.rd=it.rd||{};if(v!==0)it.rd[tg]=v;else delete it.rd[tg];
   const key=l.k+'|'+i;RD[key]=Object.assign({},it.rd);if(!Object.keys(it.rd).length)delete RD[key];
   localStorage.setItem('pm_rd',JSON.stringify(RD));
   send({aksi:'update-harian',kode:l.k,item:it.n,tanggal:tg,realisasi:Math.round(v),volume:hsOf(it)?+(v/hsOf(it)).toFixed(3):'',waktu:new Date().toISOString()})}
