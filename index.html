@@ -1792,7 +1792,7 @@ function fp(){const z=$('gz').value,l=GL();$('gzl').textContent=z;$('gpic').valu
 $('gz').onchange=()=>{fz();fp();fb()};$('gt').onchange=()=>{fi();fp();fb()};$('gi').onchange=()=>{fl();ff();fx()};$('gbd').onchange=fx;
 $('grl').onclick=e=>{const t=e.target.closest('[data-del]');if(!t)return;const it=CUI(),l=GL();if(!it)return;
  delete it.rd[t.dataset.del];const key=l.k+'|'+$('gi').value;RD[key]=Object.assign({},it.rd);if(!Object.keys(it.rd).length)delete RD[key];
- localStorage.setItem('pm_rd',JSON.stringify(RD));render();fi();fm('Entri dihapus','#F59E0B')};
+ localStorage.setItem('pm_rd',JSON.stringify(RD));render();fi();fm('Entri dihapus','#F59E0B');send({aksi:'update-harian',kode:l.k,item:it.n,tanggal:t.dataset.del,realisasi:0,volume:'',waktu:new Date().toISOString()})};
 document.querySelectorAll('[name=fm]').forEach(r=>r.onchange=()=>{const a=document.querySelector('[name=fm]:checked').value==='a';const v=document.querySelector('[name=fm]:checked').value;$('gu').classList.toggle('hidden',v!=='u');$('ga').classList.toggle('hidden',v!=='a'&&v!=='e');$('gp2').classList.toggle('hidden',v!=='s');$('giw').classList.toggle('hidden',v!=='u'&&v!=='e');$('gew').classList.toggle('hidden',v==='e');$('gcw').classList.toggle('hidden',v!=='a');$('gb').closest('label').classList.toggle('hidden',v==='s'||v==='e');$('gbl').textContent=v==='a'?'Bulan mulai':'Tanggal progres';$('gbd').classList.toggle('hidden',v!=='u');$('gb').classList.toggle('hidden',v!=='a');fb();fp();ff();fx()});
 $('bF').onclick=()=>{if(!$('gbd').value)$('gbd').value=iso(new Date());fz();fp();fb();fm('','');$('mf').classList.remove('hidden')};$('gC').onclick=()=>$('mf').classList.add('hidden');
 const send=o=>{if(!APPS_SCRIPT_URL)return;let pin=localStorage.getItem('pm_pin');
