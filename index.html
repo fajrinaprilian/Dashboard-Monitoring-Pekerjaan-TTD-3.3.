@@ -63,8 +63,8 @@ th{cursor:pointer;white-space:nowrap}
 </section>
 
 <section class="grid lg:grid-cols-2 gap-6">
-<div class="card"><h2 class="font-semibold">Peringkat Titik Lokasi</h2><p class="text-xs text-slate-500 mb-2">Diurutkan dari deviasi terbaik, mengikuti filter dan periode yang aktif. Klik kolom Kendala untuk mengisi atau mengubahnya.</p>
-<div class="overflow-auto max-h-[460px]"><table class="w-full text-sm num"><thead class="text-left text-xs text-slate-500 border-b sticky top-0 bg-white"><tr><th class="p-2">#</th><th class="p-2">Lokasi (STA)</th><th class="p-2">SPV</th><th class="p-2">Zona</th><th class="p-2 text-right">Bobot</th><th class="p-2 text-right">Rencana</th><th class="p-2 text-right">Realisasi</th><th class="p-2 text-right">Deviasi</th><th class="p-2">Kendala</th></tr></thead><tbody id="pt"></tbody></table></div></div>
+<div class="card"><h2 class="font-semibold">Peringkat Titik Lokasi</h2><p class="text-xs text-slate-500 mb-2">Diurutkan dari deviasi terbaik, mengikuti filter dan periode yang aktif. Klik kolom Kendala atau Tindak Lanjut untuk mengisi atau mengubahnya.</p>
+<div class="overflow-auto max-h-[460px]"><table class="w-full text-sm num"><thead class="text-left text-xs text-slate-500 border-b sticky top-0 bg-white"><tr><th class="p-2">#</th><th class="p-2">Lokasi (STA)</th><th class="p-2">SPV</th><th class="p-2">Zona</th><th class="p-2 text-right">Bobot</th><th class="p-2 text-right">Rencana</th><th class="p-2 text-right">Realisasi</th><th class="p-2 text-right">Deviasi</th><th class="p-2">Kendala</th><th class="p-2">Tindak Lanjut</th></tr></thead><tbody id="pt"></tbody></table></div></div>
 <div class="card"><h2 class="font-semibold">Peringkat Supervisor</h2><p class="text-xs text-slate-500 mb-2">Gabungan seluruh titik yang diampu tiap SPV.</p>
 <div class="overflow-auto max-h-[460px]"><table class="w-full text-sm num"><thead class="text-left text-xs text-slate-500 border-b sticky top-0 bg-white"><tr><th class="p-2">#</th><th class="p-2">Supervisor</th><th class="p-2 text-right">Titik</th><th class="p-2 text-right">Nilai Kontrak</th><th class="p-2 text-right">Rencana</th><th class="p-2 text-right">Realisasi</th><th class="p-2 text-right">Deviasi</th></tr></thead><tbody id="ps"></tbody></table></div>
 <div class="mt-4 h-64"><canvas id="c6"></canvas></div></div>
@@ -1480,19 +1480,19 @@ const url=()=>localStorage.getItem('pm_url')||GOOGLE_SHEET_CSV_URL||APPS_SCRIPT_
 const st=(t,c)=>{$('upd').textContent=t;$('dot').style.background=c};
 
 function parse(csv){
- const r=Papa.parse(csv.trim(),{header:true,skipEmptyLines:true,transformHeader:h=>h.trim().toLowerCase()}).data,m={},wk=[],dy=[],pg=[],kd={};let cut='';
+ const r=Papa.parse(csv.trim(),{header:true,skipEmptyLines:true,transformHeader:h=>h.trim().toLowerCase()}).data,m={},wk=[],dy=[],pg=[],kd={},tl={};let cut='';
  r.forEach(o=>{const t=(o.tipe||'ITEM').trim().toUpperCase();
   if(t==='MINGGU'){wk.push({w:o.minggu,ra:N(o.ra),ri:N(o.ri),a:o.mulai||'',b:o.selesai||''});return}
   if(t==='HARIAN'){dy.push({w:o.mulai||'',ra:N(o.ra),ri:N(o.ri),a:o.mulai||'',b:o.mulai||''});return}
   if(t==='META'){if(o.minggu==='cutoff')cut=o.mulai||'';return}
   if(t==='PROGRES'){pg.push({k:(o.kode||'').trim(),n:(o.item||'').trim(),d:o.mulai||'',v:N(o.realisasirp)});return}
-  const k=(o.kode||'').trim();if(!k)return;if((o.kendala||'').trim())kd[k]=o.kendala.trim();
+  const k=(o.kode||'').trim();if(!k)return;if((o.kendala||'').trim())kd[k]=o.kendala.trim();if((o.tindaklanjut||'').trim())tl[k]=o.tindaklanjut.trim();
   const l=m[k]||(m[k]={k,nama:o.nama||k,ruas:(o.ruas||'').trim()||ruasOf(k),zona:(o.zona||'').trim()||zonaOf(k),spv:(o.spv||'').trim()||'(Belum ditentukan)',nilai:0,ren:0,real:0,items:[]});
   const it={n:o.item||'-',sat:o.sat||'',nilai:N(o.jumlahharga),ren:N(o.rencanarp),real:N(o.realisasirp),st:o.start||'',fn:o.finish||'',rh:SPR(o.realharian),vol:o.volume||'',hs:o.hargasatuan||'',vol0:o.volume||'',hs0:o.hargasatuan||''};
   l.items.push(it);l.nilai+=it.nilai;l.ren+=it.ren;l.real+=it.real});
  const ls=Object.values(m);if(!ls.length)throw new Error('Tidak ada baris ITEM yang valid');
  pg.forEach(p=>{const l=m[p.k],it=l&&l.items.find(x=>x.n===p.n);if(it&&p.d){it.rd=it.rd||{};it.rd[p.d]=p.v}});
- return{ls,wk,dy,cut,kd};
+ return{ls,wk,dy,cut,kd,tl};
 }
 const SUM=a=>a.reduce((x,y)=>x+y,0),CL=x=>Math.min(1,Math.max(0,x));
 const cum=(a,d)=>{const y=d.getFullYear();if(y<2026)return 0;if(y>2026)return SUM(a);
@@ -1533,7 +1533,7 @@ function recalc(){L.forEach(l=>{l.nilai=l.ren=l.real=0;l.items.forEach(i=>{l.nil
 function addItem(x){const l=L.find(q=>q.k===x.k);if(!l)return;const st=new Date(2026,x.m1,1),fn=new Date(2026,x.m2+1,0);
  l.items.push({n:x.n,sat:x.sat,nilai:x.nilai,ren:0,real:0,renK:0,realK:0,st:iso(st),fn:iso(fn),rh:[],rd:{},vol:x.vol||'',hs:x.hs||''})}
 function apply(p,s){L=p.ls;WEEK=p.wk;DAY=p.dy||[];CUTD=p.cut||'';const SRV=!!APPS_SCRIPT_URL&&s==='Google Sheets';
- if(SRV){NW=[];ED={};RD={};SPVO={};KD=p.kd||{}}
+ if(SRV){NW=[];ED={};RD={};SPVO={};KD=p.kd||{};TL=p.tl||{}}
  NW.forEach(addItem);
  Object.entries(ED).forEach(([key,d])=>{const [k,i]=key.split('|'),l=L.find(q=>q.k===k),it=l&&l.items[+i];
   if(it){const f=it.nilai?d.nilai/it.nilai:0;it.ren*=f;it.renK=it.ren;Object.assign(it,d)}});
@@ -1681,13 +1681,17 @@ const VSET=it=>{const h=hsOf(it),u=esc(it.sat||'');if(!(h>0))return['–','–',
  const V=N(it.vol)||it.nilai/h,X=it.real/h,S=Math.max(0,V-X);
  return[fv(V)+' '+u,fv(X)+' '+u,`<span style="color:${S<=0.0001?'#10B981':'#0F172A'}">${fv(S)} ${u}</span>`]};
 const MD=i=>['🥇','🥈','🥉'][i]||(i+1);
-let KD=JSON.parse(localStorage.getItem('pm_kd')||'{}');
+let KD=JSON.parse(localStorage.getItem('pm_kd')||'{}'),TL=JSON.parse(localStorage.getItem('pm_tl')||'{}');
 document.addEventListener('click',e=>{const t=e.target.closest('[data-kd]');if(!t)return;const k=t.dataset.kd;
  const v=prompt('Kendala di '+k+':',KD[k]||'');if(v===null)return;
  if(v.trim())KD[k]=v.trim();else delete KD[k];localStorage.setItem('pm_kd',JSON.stringify(KD));
  send({aksi:'kendala',kode:k,kendala:KD[k]||'',waktu:new Date().toISOString()});rank(filt())});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tl]');if(!t)return;const k=t.dataset.tl;
+ const v=prompt('Tindak lanjut di '+k+(KD[k]?' (kendala: '+KD[k]+')':'')+':',TL[k]||'');if(v===null)return;
+ if(v.trim())TL[k]=v.trim();else delete TL[k];localStorage.setItem('pm_tl',JSON.stringify(TL));
+ send({aksi:'tindak-lanjut',kode:k,tindakLanjut:TL[k]||'',waktu:new Date().toISOString()});rank(filt())});
 function rank(F){const d=[...F].sort((a,b)=>dev(b)-dev(a));
- $('pt').innerHTML=d.map((l,i)=>{const v=dev(l);return`<tr class="border-b ${i<3?'bg-emerald-50/50':''}"><td class="p-2 font-bold">${MD(i)}</td><td class="p-2 font-semibold">${esc(sta(l))}<span class="text-slate-400 font-normal"> ${esc(l.k)}</span></td><td class="p-2">${esc(l.spv)}</td><td class="p-2 text-xs">${esc(l.zona)}</td><td class="p-2 text-right">${pc(pr(l.nilai,ALL))}<br><span class="text-xs text-slate-400">${mil(l.nilai)}</span></td><td class="p-2 text-right">${pc(pr(l.ren,l.nilai))}</td><td class="p-2 text-right">${pc(pr(l.real,l.nilai))}</td><td class="p-2 text-right font-semibold" style="color:${col(v)}">${sg(v)}</td><td class="p-2 max-w-[220px]"><span data-kd="${esc(l.k)}" class="cursor-pointer ${KD[l.k]?'':'text-slate-300'}" title="Klik untuk mengisi kendala">${KD[l.k]?esc(KD[l.k]):'+ tambah kendala'}</span></td></tr>`}).join('')||'<tr><td colspan="9" class="p-4 text-center text-slate-400">Tidak ada data.</td></tr>';
+ $('pt').innerHTML=d.map((l,i)=>{const v=dev(l);return`<tr class="border-b ${i<3?'bg-emerald-50/50':''}"><td class="p-2 font-bold">${MD(i)}</td><td class="p-2 font-semibold">${esc(sta(l))}<span class="text-slate-400 font-normal"> ${esc(l.k)}</span></td><td class="p-2">${esc(l.spv)}</td><td class="p-2 text-xs">${esc(l.zona)}</td><td class="p-2 text-right">${pc(pr(l.nilai,ALL))}<br><span class="text-xs text-slate-400">${mil(l.nilai)}</span></td><td class="p-2 text-right">${pc(pr(l.ren,l.nilai))}</td><td class="p-2 text-right">${pc(pr(l.real,l.nilai))}</td><td class="p-2 text-right font-semibold" style="color:${col(v)}">${sg(v)}</td><td class="p-2 max-w-[180px]"><span data-kd="${esc(l.k)}" class="cursor-pointer ${KD[l.k]?'':'text-slate-300'}" title="Klik untuk mengisi kendala">${KD[l.k]?esc(KD[l.k]):'+ tambah kendala'}</span></td><td class="p-2 max-w-[180px]"><span data-tl="${esc(l.k)}" class="cursor-pointer ${TL[l.k]?'':'text-slate-300'}" title="Klik untuk mengisi tindak lanjut">${TL[l.k]?esc(TL[l.k]):'+ tambah tindak lanjut'}</span></td></tr>`}).join('')||'<tr><td colspan="10" class="p-4 text-center text-slate-400">Tidak ada data.</td></tr>';
  const g={};F.forEach(l=>{const o=g[l.spv]||(g[l.spv]={n:0,r:0,x:0,t:0});o.n+=l.nilai;o.r+=l.ren;o.x+=l.real;o.t++});
  const S=Object.entries(g).map(([k,o])=>({k,...o,d:pr(o.x-o.r,o.n)})).sort((a,b)=>(a.k[0]==='('?1:0)-(b.k[0]==='('?1:0)||b.d-a.d);
  $('ps').innerHTML=S.map((o,i)=>`<tr class="border-b ${i<3?'bg-emerald-50/50':''}"><td class="p-2 font-bold">${MD(i)}</td><td class="p-2 font-semibold">${esc(o.k)}</td><td class="p-2 text-right">${o.t}</td><td class="p-2 text-right">${mil(o.n)}</td><td class="p-2 text-right">${pc(pr(o.r,o.n))}</td><td class="p-2 text-right">${pc(pr(o.x,o.n))}</td><td class="p-2 text-right font-semibold" style="color:${col(o.d)}">${sg(o.d)}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 text-center text-slate-400">Tidak ada data.</td></tr>';
@@ -1827,10 +1831,10 @@ $('gS').onclick=()=>{const l=GL();if(!l)return fm('Pilih titik lokasi','#EF4444'
  else{const n=$('gn').value.trim(),v=+$('gv').value,e=+$('ge').value;if(!n||!(v>0)||e<m)return fm('Lengkapi nama, nilai, dan bulan (selesai ≥ mulai)','#EF4444');
   const x={k:l.k,n,sat:$('gs').value,nilai:v,m1:m,m2:e,vol:$('gvo').value,hs:$('ghs').value};NW.push(x);addItem(x);send({aksi:'tambah',...x,waktu:new Date().toISOString()});fz()}
  localStorage.setItem('pm_n',JSON.stringify(NW));render();fx();['gvr','gr','gp'].forEach(i=>$(i).value='');fi();fm('✓ Tersimpan & dashboard diperbarui','#10B981')};
-$('gR').onclick=()=>{if(confirm('Hapus semua perubahan lokal dari form?')){E={};RD={};KD={};NW=[];ED={};SPVO={};ZONA_PIC=Object.assign({},PIC_DEF);['pm_e','pm_n','pm_spv','pm_pic','pm_d','pm_rd','pm_kd'].forEach(k=>localStorage.removeItem(k));go();fm('Perubahan lokal dihapus','#F59E0B')}};
-$('gE').onclick=()=>{const F='Tipe,Ruas,Zona,SPV,Kendala,Kode,Nama,Item,Sat,Volume,HargaSatuan,JumlahHarga,RencanaRp,RealisasiRp,Start,Finish,RealHarian,Minggu,Ra,Ri,Mulai,Selesai'.split(','),r=[],P=(o={})=>F.map(f=>o[f]??'');
+$('gR').onclick=()=>{if(confirm('Hapus semua perubahan lokal dari form?')){E={};RD={};KD={};TL={};NW=[];ED={};SPVO={};ZONA_PIC=Object.assign({},PIC_DEF);['pm_e','pm_n','pm_spv','pm_pic','pm_d','pm_rd','pm_kd','pm_tl'].forEach(k=>localStorage.removeItem(k));go();fm('Perubahan lokal dihapus','#F59E0B')}};
+$('gE').onclick=()=>{const F='Tipe,Ruas,Zona,SPV,Kendala,TindakLanjut,Kode,Nama,Item,Sat,Volume,HargaSatuan,JumlahHarga,RencanaRp,RealisasiRp,Start,Finish,RealHarian,Minggu,Ra,Ri,Mulai,Selesai'.split(','),r=[],P=(o={})=>F.map(f=>o[f]??'');
  L.forEach(l=>l.items.forEach(it=>{
-  r.push(P({Tipe:'ITEM',Ruas:l.ruas,Zona:l.zona,SPV:l.spv,Kendala:KD[l.k]||'',Kode:l.k,Nama:l.nama,Item:it.n,Sat:it.sat,Volume:it.vol,HargaSatuan:it.hs,
+  r.push(P({Tipe:'ITEM',Ruas:l.ruas,Zona:l.zona,SPV:l.spv,Kendala:KD[l.k]||'',TindakLanjut:TL[l.k]||'',Kode:l.k,Nama:l.nama,Item:it.n,Sat:it.sat,Volume:it.vol,HargaSatuan:it.hs,
    JumlahHarga:Math.round(it.nilai),RencanaRp:Math.round(it.ren),RealisasiRp:Math.round(it.real),
    Start:it.st||'',Finish:it.fn||'',RealHarian:(it.rh||[]).map(e=>e[0]+':'+e[1]).join('|')}));
   if(it.rd)Object.entries(it.rd).forEach(([d,v])=>r.push(P({Tipe:'PROGRES',Kode:l.k,Item:it.n,RealisasiRp:Math.round(v),Mulai:d})))}));
